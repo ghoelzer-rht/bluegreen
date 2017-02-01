@@ -77,6 +77,13 @@
             </thead>
             <tbody>
               <tr>
+                <td>Pod Name</td>
+                <?php 
+                  $MachineName = getenv(HOSTNAME); 
+                  echo '<td>' . $MachineName . '</td>';
+                ?>
+              </tr>
+              <tr>
                 <td>Pod IP</td>
                 <td><?php echo $_SERVER['SERVER_ADDR'] ?></td>
               </tr>
