@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  name: php-bluegreen-promote
+  labels:
+    name: php-bluegreen-promote
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "php-bluegreen", "namespace": "", "kind": "DeploymentConfig"}]'
+spec:
+  triggers:
+    -
+      type: GitHub
+      github:
+        secret: secret101
+    -
+      type: Generic
+      generic:
+        secret: secret101
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    type: JenkinsPipeline
+    jenkinsPipelineStrategy:
+      jenkinsfile: "node('maven') {\nstage 'build'\nopenshiftBuild(buildConfig: 'php-bluegreen', showBuildLogs: 'true')}"
+  output:
+  resources:
+postCommit:
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "php-bluegreen", "namespace": "",
+      "kind": "DeploymentConfig"}]'
+  creationTimestamp: 2017-02-01T23:09:54Z
+  labels:
+    name: php-bluegreen-promote
+  name: php-bluegreen-promote
+  namespace: devops-demos
+spec:
+  nodeSelector: null
+  output: {}
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node('maven') {
+        stage 'promote release'
+        openshiftTag alias: 'false', apiURL: '', authToken: '', destStream: 'php-bluegreen', destTag: 'current-release', destinationAuthToken: '', destinationNamespace: '', namespace: '', srcStream: 'php-bluegreen', srcTag: 'next-release', verbose: 'false'
+        stage 'deploy'
+        openshiftDeploy(deploymentConfig: 'php-bluegreen')
+        stage 'smoke test: side'
+        #
+        sh 'curl http://php-bluegreen-devops-demos.int.open.paas.redhat.com/ | grep -i "Welcome to an OpenShift Application version 1.21"'
+        sh 'curl http://php-bluegreen-devops-demos.int.open.paas.redhat.com/ | grep -i "Welcome to an OpenShift Application version 1.21"'
+        }
+    type: JenkinsPipeline
+  triggers:
+  - github:
+      secret: secret101
+    type: GitHub
+  - generic:
+      secret: secret101
+    type: Generic
+status:
+  lastVersion: 10

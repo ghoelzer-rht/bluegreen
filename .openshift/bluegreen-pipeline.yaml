@@ -26,3 +26,48 @@ spec:
   output:
   resources:
 postCommit:
+apiVersion: v1
+kind: BuildConfig
+metadata:
+  annotations:
+    pipeline.alpha.openshift.io/uses: '[{"name": "php-bluegreen", "namespace": "",
+      "kind": "DeploymentConfig"}]'
+  creationTimestamp: 2017-02-01T23:09:54Z
+  labels:
+    name: php-bluegreen-pipeline
+  name: php-bluegreen-pipeline
+  namespace: devops-demos
+  resourceVersion: "29272432"
+  selfLink: /oapi/v1/namespaces/devops-demos/buildconfigs/php-bluegreen-pipeline
+  uid: 8a80fe5d-e8d3-11e6-8425-0a979bbb7299
+spec:
+  nodeSelector: null
+  output: {}
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    type: None
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfile: |-
+        node('maven') {
+        stage 'build'
+        openshiftBuild(buildConfig: 'php-bluegreen', showBuildLogs: 'true')
+        stage 'deploy'
+        openshiftDeploy(deploymentConfig: 'php-bluegreen-build')
+        stage 'test'
+        sh 'curl http://php-bluegreen-build-devops-demos.int.open.paas.redhat.com/ | grep -i "Welcome to an OpenShift Application version 1.21"'
+        stage 'tag image'
+        openshiftTag alias: 'false', apiURL: '', authToken: '', destStream: 'php-bluegreen', destTag: 'next-release', destinationAuthToken: '', destinationNamespace: '', namespace: '', srcStream: 'php-bluegreen', srcTag: 'latest', verbose: 'false'
+        }
+    type: JenkinsPipeline
+  triggers:
+  - github:
+      secret: secret101
+    type: GitHub
+  - generic:
+      secret: secret101
+    type: Generic
+status:
+  lastVersion: 10
