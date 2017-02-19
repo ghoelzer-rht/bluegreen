@@ -621,7 +621,7 @@ parameters:
   name: APP_BUILD_DEPLOYMENT
   required: true
   value: php-bluegreen-build
-  - description: Application Release Deployment Name
+- description: Application Release Deployment Name
   displayName: Application Release Deployment
   name: APP_RELEASE_DEPLOYMENT
   required: true
