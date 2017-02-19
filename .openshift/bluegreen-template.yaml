@@ -31,7 +31,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: php:7.0
+          name: php:latest
           namespace: openshift
       type: Source
     triggers:
@@ -442,9 +442,18 @@ objects:
         from:
           kind: ImageStreamTag
           name: ${APP_NAME}:next-release
-          namespace: ${NAMESPACE}
+          namespace:
       type: ImageChange
   status: {}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      application: ${APP_NAME}
+      template: bluegreen-template
+    name: ${APP_NAME}
+    namespace:
+  spec: {}
 - apiVersion: v1
   kind: Service
   metadata:
@@ -550,25 +559,6 @@ objects:
     type: ClusterIP
   status:
     loadBalancer: {}
-- apiVersion: v1
-  kind: Route
-  metadata:
-    annotations:
-      openshift.io/host.generated: "true"
-    creationTimestamp: null
-    labels:
-      template: jenkins-ephemeral-template
-    name: jenkins
-  spec:
-    host:
-    tls:
-      insecureEdgeTerminationPolicy: Redirect
-      termination: edge
-    to:
-      kind: Service
-      name: jenkins
-      weight: 100
-    wildcardPolicy: None
 - apiVersion: v1
   kind: Route
   metadata:
