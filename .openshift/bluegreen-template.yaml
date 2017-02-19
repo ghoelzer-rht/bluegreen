@@ -560,7 +560,7 @@ objects:
       template: jenkins-ephemeral-template
     name: jenkins
   spec:
-    host: ${APP_JENKINS_ROUTE_HOSTNAME}
+    host:
     tls:
       insecureEdgeTerminationPolicy: Redirect
       termination: edge
@@ -584,7 +584,7 @@ objects:
     - kind: Service
       name: ${APP_RELEASE_DEPLOYMENT}
       weight: 0
-    host: ${APP_RELEASE_ROUTE_HOSTNAME}
+    host:
     port:
       targetPort: 8080-tcp
     to:
@@ -602,7 +602,7 @@ objects:
       app: ${APP_BUILD_DEPLOYMENT}
     name: ${APP_BUILD_DEPLOYMENT}
   spec:
-    host: ${APP_BUILD_ROUTE_HOSTNAME}
+    host:
     port:
       targetPort: 8080-tcp
     to:
@@ -621,6 +621,11 @@ parameters:
   name: APP_BUILD_DEPLOYMENT
   required: true
   value: php-bluegreen-build
+  - description: Application Release Deployment Name
+  displayName: Application Release Deployment
+  name: APP_RELEASE_DEPLOYMENT
+  required: true
+  value: php-bluegreen-release
 - description: A secret string used to configure the GitHub webhook.
   displayName: GitHub Webhook Secret
   from: '[a-zA-Z0-9]{40}'
@@ -631,38 +636,3 @@ parameters:
   from: '[a-zA-Z0-9]{40}'
   generate: expression
   name: GENERIC_WEBHOOK_SECRET
-- description: Path to saved JSON file with configuration for the gateway. Has to
-    be injected to the docker image as read only volume.
-  name: THREESCALE_CONFIG_FILE
-- description: Name for the 3scale API Gateway
-  name: THREESCALE_GATEWAY_NAME
-  required: true
-  value: threescalegw
-- description: Docker image to use.
-  name: THREESCALE_GATEWAY_IMAGE
-  required: true
-  value: rhamp10/apicast-gateway:1.0.0-4
-- description: DNS Resolver for openresty, if empty it will be autodiscovered
-  name: RESOLVER
-- description: Subset of services to run. Use comma separated list of service ids
-    (eg. 42,1337)
-  name: APICAST_SERVICES
-- description: 'What to do on missing or invalid configuration. Allowed values are:
-    log, exit.'
-  name: MISSING_CONFIGURATION
-  value: exit
-- description: 'Log level. One of the following: debug, info, notice, warn, error,
-    crit, alert, or emerg.'
-  name: APICAST_LOG_LEVEL
-- description: Enable path routing. Experimental feature.
-  name: PATH_ROUTING
-  value: "false"
-- description: Enable traffic logging to 3scale. Includes whole request and response.
-  name: REQUEST_LOGS
-  value: "false"
-- description: Enable logging response codes to 3scale.
-  name: RESPONSE_CODES
-  value: "false"
-- description: Reload config on every request
-  name: APICAST_RELOAD_CONFIG
-  value: "false"
