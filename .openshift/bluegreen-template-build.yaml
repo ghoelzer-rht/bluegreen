@@ -16,27 +16,27 @@ objects:
     annotations:
       description: The web server's http port.
     labels:
-      application: ${APPLICATION_NAME}
-    name: ${APPLICATION_NAME}
+      application: ${APPLICATION_NAME}-build
+    name: ${APPLICATION_NAME}-build
   spec:
     ports:
     - port: 8080
       targetPort: 8080
     selector:
-      deploymentConfig: ${APPLICATION_NAME}
+      deploymentConfig: ${APPLICATION_NAME}-build
 - apiVersion: v1
-  id: ${APPLICATION_NAME}-http
+  id: ${APPLICATION_NAME}-http-build
   kind: Route
   metadata:
     annotations:
       description: Route for application's http service.
     labels:
-      application: ${APPLICATION_NAME}
-    name: ${APPLICATION_NAME}
+      application: ${APPLICATION_NAME}-build
+    name: ${APPLICATION_NAME}-build
   spec:
     host: ${HOSTNAME_HTTP}
     to:
-      name: ${APPLICATION_NAME}
+      name: ${APPLICATION_NAME}-build
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -79,23 +79,62 @@ objects:
       type: ImageChange
     - type: ConfigChange
 - apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      pipeline.alpha.openshift.io/uses: '[{"name": ${APPLICATION_NAME}, "namespace": "",
+        "kind": "DeploymentConfig"}]'
+    creationTimestamp: null
+    labels:
+      name: ${APPLICATION_NAME}-pipeline
+    name: ${APPLICATION_NAME}-pipeline
+  spec:
+    nodeSelector: null
+    output: {}
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      type: None
+    strategy:
+      jenkinsPipelineStrategy:
+        jenkinsfile: |-
+          node('maven') {
+          stage 'build'
+          openshiftBuild(buildConfig: ${APPLICATION_NAME}, showBuildLogs: 'true')
+          stage 'deploy'
+          openshiftDeploy(deploymentConfig: ${APPLICATION_NAME}-build)
+          stage 'test'
+          sh 'curl <UPDATE with BUILD DEPLOYMENT ROUTE> | grep -i "Welcome to an OpenShift Application version 1.10"'
+          stage 'tag image'
+          openshiftTag alias: 'false', apiURL: '', authToken: '', destStream: ${APPLICATION_NAME}, destTag: 'next-release', destinationAuthToken: '', destinationNamespace: '', namespace: '', srcStream: ${APPLICATION_NAME}, srcTag: 'latest', verbose: 'false'
+          }
+      type: JenkinsPipeline
+    triggers:
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+    - generic:
+        secret: ${GENERIC_WEBHOOK_SECRET}
+      type: Generic
+- apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
-      application: ${APPLICATION_NAME}
-    name: ${APPLICATION_NAME}
+      application: ${APPLICATION_NAME}-build
+    name: ${APPLICATION_NAME}-build
   spec:
     replicas: 1
     selector:
-      deploymentConfig: ${APPLICATION_NAME}
+      deploymentConfig: ${APPLICATION_NAME}-build
     strategy:
       type: Recreate
     template:
       metadata:
         labels:
-          application: ${APPLICATION_NAME}
-          deploymentConfig: ${APPLICATION_NAME}
-        name: ${APPLICATION_NAME}
+          application: ${APPLICATION_NAME}-build
+          deploymentConfig: ${APPLICATION_NAME}-build
+        name: ${APPLICATION_NAME}-build
       spec:
         containers:
         - env:
@@ -117,7 +156,7 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
-          name: ${APPLICATION_NAME}
+          name: ${APPLICATION_NAME}-build
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -147,7 +186,7 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - ${APPLICATION_NAME}
+        - ${APPLICATION_NAME}-build
         from:
           kind: ImageStreamTag
           name: ${APPLICATION_NAME}:latest
