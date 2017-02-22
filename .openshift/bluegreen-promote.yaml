@@ -36,7 +36,6 @@ metadata:
   labels:
     name: php-bluegreen-promote
   name: php-bluegreen-promote
-  namespace: devops-demos
 spec:
   nodeSelector: null
   output: {}

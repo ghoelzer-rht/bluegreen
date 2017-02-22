@@ -36,10 +36,6 @@ metadata:
   labels:
     name: php-bluegreen-pipeline
   name: php-bluegreen-pipeline
-  namespace: devops-demos
-  resourceVersion: "29272432"
-  selfLink: /oapi/v1/namespaces/devops-demos/buildconfigs/php-bluegreen-pipeline
-  uid: 8a80fe5d-e8d3-11e6-8425-0a979bbb7299
 spec:
   nodeSelector: null
   output: {}

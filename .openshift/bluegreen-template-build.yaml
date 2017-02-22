@@ -6,7 +6,7 @@ metadata:
   annotations:
     description: Application template for Blue Green Deployment Demo using PHP application built using S2I and Build Pipelines.
     iconClass: icon-php
-    tags: php,jenkins,buildpipeline
+    tags: php,demo
     version: 1.0.0
   name: bluegreen-demo
 objects:
@@ -78,45 +78,6 @@ objects:
     - imageChange: {}
       type: ImageChange
     - type: ConfigChange
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations:
-      pipeline.alpha.openshift.io/uses: '[{"name": ${APPLICATION_NAME}, "namespace": "",
-        "kind": "DeploymentConfig"}]'
-    creationTimestamp: null
-    labels:
-      name: ${APPLICATION_NAME}-pipeline
-    name: ${APPLICATION_NAME}-pipeline
-  spec:
-    nodeSelector: null
-    output: {}
-    postCommit: {}
-    resources: {}
-    runPolicy: Serial
-    source:
-      type: None
-    strategy:
-      jenkinsPipelineStrategy:
-        jenkinsfile: |-
-          node('maven') {
-          stage 'build'
-          openshiftBuild(buildConfig: ${APPLICATION_NAME}, showBuildLogs: 'true')
-          stage 'deploy'
-          openshiftDeploy(deploymentConfig: ${APPLICATION_NAME}-build)
-          stage 'test'
-          sh 'curl <UPDATE with BUILD DEPLOYMENT ROUTE> | grep -i "Welcome to an OpenShift Application version 1.10"'
-          stage 'tag image'
-          openshiftTag alias: 'false', apiURL: '', authToken: '', destStream: ${APPLICATION_NAME}, destTag: 'next-release', destinationAuthToken: '', destinationNamespace: '', namespace: '', srcStream: ${APPLICATION_NAME}, srcTag: 'latest', verbose: 'false'
-          }
-      type: JenkinsPipeline
-    triggers:
-    - github:
-        secret: ${GITHUB_WEBHOOK_SECRET}
-      type: GitHub
-    - generic:
-        secret: ${GENERIC_WEBHOOK_SECRET}
-      type: Generic
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
